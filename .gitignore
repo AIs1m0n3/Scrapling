@@ -108,3 +108,8 @@ output/*/index.html
 docs/_build
 public/
 web/
+
+# Smart-scrape embedding store (keep .gitkeep, ignore DB)
+app/data/*.db
+app/data/*.db-shm
+app/data/*.db-wal

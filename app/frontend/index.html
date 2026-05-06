@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scrapling SaaS — Market Research</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">S</div>
+      <span class="brand-name">Scrapling</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-panel="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Ricerca
+      </a>
+      <a href="#" class="nav-item" data-panel="history">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Storico
+      </a>
+      <a href="#" class="nav-item" data-panel="direct">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        Scrape Diretto
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="status-dot"></div>
+      <span>API Online</span>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main">
+
+    <!-- Search Panel -->
+    <section class="panel" id="panel-search">
+      <header class="panel-header">
+        <h1>Ricerca Mercato Intelligente</h1>
+        <p>Scrivi cosa vuoi analizzare e l'AI troverà i dati per te</p>
+      </header>
+
+      <div class="search-card">
+        <div class="field-group">
+          <label for="prompt">Cosa vuoi ricercare?</label>
+          <textarea id="prompt" rows="3" placeholder="Es: Prezzi degli smartphone di fascia media su Amazon Italia, trend Q1 2025..."></textarea>
+        </div>
+        <div class="field-group">
+          <label for="url">URL specifico <span class="optional">(opzionale)</span></label>
+          <input type="url" id="url" placeholder="https://example.com/page-da-analizzare" />
+        </div>
+        <button class="btn-primary" id="btn-scrape">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Scrapa
+        </button>
+      </div>
+
+      <!-- Spinner -->
+      <div class="spinner-wrap" id="spinner" style="display:none">
+        <div class="spinner"></div>
+        <p id="spinner-msg">Analisi in corso...</p>
+      </div>
+
+      <!-- Results -->
+      <div id="results" style="display:none">
+        <div class="results-header">
+          <div>
+            <h2>Risultati</h2>
+            <p id="sites-visited" class="meta"></p>
+          </div>
+          <button class="btn-secondary" id="btn-pdf">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Scarica Report PDF
+          </button>
+        </div>
+
+        <div class="summary-box" id="summary-box" style="display:none">
+          <div class="summary-label">Analisi AI</div>
+          <p id="summary-text"></p>
+        </div>
+
+        <div class="table-wrap">
+          <table id="data-table">
+            <thead>
+              <tr><th>Campo</th><th>Valore</th><th>Fonte</th></tr>
+            </thead>
+            <tbody id="data-body"></tbody>
+          </table>
+          <p id="no-data" style="display:none" class="empty-msg">Nessun dato estratto.</p>
+        </div>
+      </div>
+
+      <div class="error-box" id="error-box" style="display:none"></div>
+    </section>
+
+    <!-- History Panel -->
+    <section class="panel" id="panel-history" style="display:none">
+      <header class="panel-header">
+        <h1>Storico Ricerche</h1>
+        <button class="btn-secondary" id="btn-refresh-history">Aggiorna</button>
+      </header>
+      <div id="history-list" class="history-list"></div>
+    </section>
+
+    <!-- Direct Scrape Panel -->
+    <section class="panel" id="panel-direct" style="display:none">
+      <header class="panel-header">
+        <h1>Scrape Diretto</h1>
+        <p>Specifica URL e selettori CSS manualmente</p>
+      </header>
+      <div class="search-card">
+        <div class="field-group">
+          <label for="direct-url">URL</label>
+          <input type="url" id="direct-url" placeholder="https://example.com" />
+        </div>
+        <div class="field-group">
+          <label>Selettori CSS</label>
+          <div id="selectors-list">
+            <div class="selector-row">
+              <input type="text" placeholder="Nome campo" class="sel-name" />
+              <input type="text" placeholder="Selettore CSS (es: h1, .price)" class="sel-css" />
+              <button class="btn-icon btn-remove-sel" title="Rimuovi">✕</button>
+            </div>
+          </div>
+          <button class="btn-link" id="btn-add-sel">+ Aggiungi selettore</button>
+        </div>
+        <button class="btn-primary" id="btn-direct-scrape">Avvia Scrape</button>
+      </div>
+      <div class="spinner-wrap" id="direct-spinner" style="display:none">
+        <div class="spinner"></div>
+        <p>Scraping in corso...</p>
+      </div>
+      <div id="direct-results" style="display:none">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Valore</th><th>Fonte</th></tr></thead>
+            <tbody id="direct-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="error-box" id="direct-error" style="display:none"></div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
