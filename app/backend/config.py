@@ -61,11 +61,17 @@ HTTP_RETRY_DELAY: int = int(os.getenv("HTTP_RETRY_DELAY", "2"))
 # Maximum number of sites to scrape per request (overrides LLM suggestion if lower)
 SMART_SCRAPE_MAX_SITES: int = int(os.getenv("SMART_SCRAPE_MAX_SITES", "5"))
 
-# Maximum rows extracted per selector per URL (prevents runaway responses)
-MAX_ROWS_PER_SELECTOR: int = int(os.getenv("MAX_ROWS_PER_SELECTOR", "20"))
+# Target number of tenders to return per job (across all pages and sources)
+SMART_SCRAPE_MAX_RESULTS: int = int(os.getenv("SMART_SCRAPE_MAX_RESULTS", "50"))
+
+# Maximum pages to follow per source site (prevents infinite crawl)
+SMART_SCRAPE_MAX_PAGES: int = int(os.getenv("SMART_SCRAPE_MAX_PAGES", "5"))
+
+# Maximum rows extracted per selector per URL — legacy scrape-direct only
+MAX_ROWS_PER_SELECTOR: int = int(os.getenv("MAX_ROWS_PER_SELECTOR", "100"))
 
 # Maximum characters of HTML sent to the LLM for selector extraction
-HTML_SNIPPET_MAX_CHARS: int = int(os.getenv("HTML_SNIPPET_MAX_CHARS", "12000"))
+HTML_SNIPPET_MAX_CHARS: int = int(os.getenv("HTML_SNIPPET_MAX_CHARS", "20000"))
 
 # ── LLM model selection ────────────────────────────────────────────────────────
 

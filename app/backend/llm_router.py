@@ -89,36 +89,45 @@ def extract_selectors_from_html(html: str, query: str, url: str = "") -> dict:
       {
         "row_container": "CSS selector for each row/item",
         "fields": [
-          {"name": "titolo", "css": "...", "attr": null},
-          {"name": "link",   "css": "a",  "attr": "href"},
-          ...
-        ]
+          {"name": "titolo",              "css": "...", "attr": null},
+          {"name": "cig",                 "css": "...", "attr": null},
+          {"name": "importo",             "css": "...", "attr": null},
+          {"name": "scadenza",            "css": "...", "attr": null},
+          {"name": "stazione_appaltante", "css": "...", "attr": null},
+          {"name": "link",                "css": "a",  "attr": "href"}
+        ],
+        "pagination_next": "CSS selector for the next-page link (or null)"
       }
-    On failure returns {"row_container": null, "fields": []}.
+    On failure returns {"row_container": null, "fields": [], "pagination_next": null}.
     """
     system = (
-        "You are an expert HTML analyst. Given an HTML snippet and a data extraction request, "
-        "generate CSS selectors to extract structured records.\n\n"
-        "Return ONLY a valid JSON object with this exact structure:\n"
+        "You are an expert HTML analyst specializing in Italian public procurement portals. "
+        "Given an HTML snippet and a data extraction request, generate CSS selectors "
+        "to extract ALL structured records visible on the page.\n\n"
+        "Return ONLY a valid JSON object with this EXACT structure (no extra keys, no markdown):\n"
         "{\n"
-        '  "row_container": "CSS selector that matches each individual record row/card/item",\n'
+        '  "row_container": "CSS selector matching EACH individual tender/record row or card",\n'
         '  "fields": [\n'
-        '    {"name": "titolo",              "css": "...", "attr": null},\n'
-        '    {"name": "cig",                 "css": "...", "attr": null},\n'
-        '    {"name": "importo",             "css": "...", "attr": null},\n'
-        '    {"name": "scadenza",            "css": "...", "attr": null},\n'
-        '    {"name": "stazione_appaltante", "css": "...", "attr": null},\n'
-        '    {"name": "link",                "css": "a",  "attr": "href"}\n'
-        "  ]\n"
+        '    {"name": "titolo",              "css": "<selector>", "attr": null},\n'
+        '    {"name": "cig",                 "css": "<selector>", "attr": null},\n'
+        '    {"name": "importo",             "css": "<selector>", "attr": null},\n'
+        '    {"name": "scadenza",            "css": "<selector>", "attr": null},\n'
+        '    {"name": "stazione_appaltante", "css": "<selector>", "attr": null},\n'
+        '    {"name": "link",                "css": "a",          "attr": "href"},\n'
+        '    {"name": "regione",             "css": "<selector>", "attr": null}\n'
+        "  ],\n"
+        '  "pagination_next": "CSS selector for the \'next page\' link, or null if not present"\n'
         "}\n\n"
-        "Rules:\n"
-        "- row_container: a selector matching EACH record container (e.g. 'table tbody tr', "
-        "'div.bando-item', 'li.gara'). Use the MOST specific selector you can find.\n"
-        "- css for fields: relative to row_container, use '::text' is NOT needed (added automatically).\n"
-        "- attr: null for text content; 'href' for link elements.\n"
-        "- Only include fields you can actually see in the HTML. Omit fields with no matching data.\n"
-        "- If the page has no structured tabular/list data, return: "
-        '{"row_container": null, "fields": []}'
+        "RULES:\n"
+        "1. row_container: MUST match every individual tender row (not the table/list itself). "
+        "   Examples: 'table#results tbody tr', 'div.tender-item', 'li.gara', 'tr.bando'.\n"
+        "2. fields css: RELATIVE to row_container. Do NOT include '::text' (added automatically).\n"
+        "3. attr: null for text content; 'href' for anchor links.\n"
+        "4. Include ONLY fields you can actually identify in the HTML. Skip fields not found.\n"
+        "5. pagination_next: look for 'successivo', '>', '›', 'next', 'avanti', rel=next. "
+        "   Return the full CSS selector for the <a> element, or null.\n"
+        "6. If no structured list/table of items is found, return: "
+        '{"row_container": null, "fields": [], "pagination_next": null}'
     )
     url_hint = f"\nSource URL: {url}" if url else ""
     user = f"Extraction request: {query}{url_hint}\n\nHTML:\n{html}"
@@ -133,12 +142,15 @@ def extract_selectors_from_html(html: str, query: str, url: str = "") -> dict:
         schema = _parse_json_response(raw)
         log.info(
             f"LLM schema: container={schema.get('row_container')!r} "
-            f"fields={[f['name'] for f in schema.get('fields', [])]}"
+            f"fields={[f['name'] for f in schema.get('fields', [])]} "
+            f"pagination={schema.get('pagination_next')!r}"
         )
+        # Ensure pagination_next is present (older model responses might omit it)
+        schema.setdefault("pagination_next", None)
         return schema
     except Exception as exc:
         log.error(f"Selector extraction failed: {exc}")
-        return {"row_container": None, "fields": []}
+        return {"row_container": None, "fields": [], "pagination_next": None}
 
 
 def llm_summarize(data: list[dict], prompt: str) -> str:
